@@ -30,14 +30,18 @@
     <ul id="results"></ul>
     
     <script>
-        const countrySelect = document.getElementById('country');
-        const industrySelect = document.getElementById('industry');
-        const businessFunctionSelect = document.getElementById('businessFunction');
-        const resultsList = document.getElementById('results');
+    const countrySelect = document.getElementById('country');
+    const industrySelect = document.getElementById('industry');
+    const businessFunctionSelect = document.getElementById('businessFunction');
+    const resultsList = document.getElementById('results');
 
-        // Fetch options for dropdowns from backend
-        async function populateDropdowns() {
+    // Fetch options for dropdowns
+    async function populateDropdowns() {
+        try {
             const response = await fetch('/.netlify/functions/ai_usecases?getOptions=true');
+            if (!response.ok) {
+                throw new Error(`Failed to fetch dropdown data: ${response.statusText}`);
+            }
             const data = await response.json();
 
             // Populate country dropdown
@@ -68,23 +72,31 @@
                     businessFunctionSelect.appendChild(option);
                 });
             });
+        } catch (error) {
+            console.error("Error populating dropdowns:", error);
         }
+    }
 
-        // Fetch recommendations on form submission
-        document.getElementById('usecaseForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+    // Fetch recommendations on form submission
+    document.getElementById('usecaseForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-            const formData = {
-                country: countrySelect.value,
-                industry: industrySelect.value,
-                businessFunction: businessFunctionSelect.value,
-            };
+        const formData = {
+            country: countrySelect.value,
+            industry: industrySelect.value,
+            businessFunction: businessFunctionSelect.value,
+        };
 
+        try {
             const response = await fetch('/.netlify/functions/ai_usecases', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
             });
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch recommendations: ${response.statusText}`);
+            }
 
             const result = await response.json();
             resultsList.innerHTML = '';
@@ -94,10 +106,14 @@
                 li.textContent = usecase;
                 resultsList.appendChild(li);
             });
-        });
+        } catch (error) {
+            console.error("Error fetching recommendations:", error);
+        }
+    });
 
-        // Initialize dropdowns on page load
-        populateDropdowns();
-    </script>
+    // Initialize dropdowns on page load
+    populateDropdowns();
+</script>
+
 </body>
 </html>
