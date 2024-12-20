@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generative AI Use Cases</title>
+</head>
+<body>
+    <h1>Top Generative AI Use Cases</h1>
+    <form id="usecaseForm">
+        <label for="country">European Country:</label>
+        <input type="text" id="country" name="country" required><br><br>
+        
+        <label for="industry">Industry:</label>
+        <input type="text" id="industry" name="industry" required><br><br>
+        
+        <label for="businessFunction">Business Function:</label>
+        <input type="text" id="businessFunction" name="businessFunction" required><br><br>
+        
+        <button type="submit">Get Use Cases</button>
+    </form>
+    
+    <h2>Recommended Use Cases:</h2>
+    <ul id="results"></ul>
+    
+    <script>
+        const form = document.getElementById('usecaseForm');
+        const resultsList = document.getElementById('results');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(form);
+            const data = {
+                country: formData.get('country'),
+                industry: formData.get('industry'),
+                businessFunction: formData.get('businessFunction'),
+            };
+
+            const response = await fetch('/.netlify/functions/ai_usecases', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data),
+            });
+
+            const result = await response.json();
+            resultsList.innerHTML = '';
+
+            result.usecases.forEach((usecase) => {
+                const li = document.createElement('li');
+                li.textContent = usecase;
+                resultsList.appendChild(li);
+            });
+        });
+    </script>
+</body>
+</html>
