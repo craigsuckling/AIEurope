@@ -8,9 +8,9 @@
 <body>
     <h1>Top Generative AI Use Cases</h1>
     <form id="usecaseForm">
-        <label for="countries">European countries:</label>
+        <label for="countries">European Country:</label>
         <select id="countries" name="countries" required>
-            <option value="" disabled selected>Select a countries</option>
+            <option value="" disabled selected>Select a country</option>
         </select><br><br>
         
         <label for="industry">Industry:</label>
@@ -46,10 +46,10 @@
             console.log("Dropdown data:", data);
 
             // Populate countries dropdown
-            data.countries.forEach(countries => {
+            data.countries.forEach(country => {
                 const option = document.createElement('option');
-                option.value = countries;
-                option.textContent = countries;
+                option.value = country;
+                option.textContent = country;
                 countriesSelect.appendChild(option);
             });
 
@@ -87,12 +87,12 @@
         e.preventDefault();
 
         const formData = {
-            countries: countriesSelect.value,
+            country: countriesSelect.value,
             industry: industrySelect.value,
             businessFunction: businessFunctionSelect.value,
         };
 
-        if (!formData.countries || !formData.industry || !formData.businessFunction) {
+        if (!formData.country || !formData.industry || !formData.businessFunction) {
             alert("Please select all options before submitting.");
             return;
         }
