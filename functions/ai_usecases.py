@@ -122,23 +122,32 @@ COUNTRY_SPECIFIC_INSIGHTS = {
     ],
 }
 
-@app.route('/.netlify/functions/ai_usecases', methods=['POST'])
-def get_usecases():
-    data = request.json
-    country = data.get("country")
-    industry = data.get("industry")
-    business_function = data.get("businessFunction")
+@app.route('/.netlify/functions/ai_usecases', methods=['GET', 'POST'])
+def ai_usecases():
+    if request.method == 'GET' and request.args.get('getOptions') == 'true':
+        # Return dropdown options
+        countries = list(COUNTRY_SPECIFIC_INSIGHTS.keys())
+        industries = list(USE_CASES.keys())
+        business_functions = {industry: list(funcs.keys()) for industry, funcs in USE_CASES.items()}
+        return jsonify({"countries": countries, "industries": industries, "businessFunctions": business_functions})
 
-    # Fetch relevant industry and business function use cases
-    usecases = USE_CASES.get(industry, {}).get(business_function, ["No relevant use cases found."])
+    elif request.method == 'POST':
+        # Handle use case recommendations
+        data = request.json
+        country = data.get("country")
+        industry = data.get("industry")
+        business_function = data.get("businessFunction")
 
-    # Append country-specific insights if available
-    country_insights = COUNTRY_SPECIFIC_INSIGHTS.get(country, [])
-    if country_insights:
-        usecases.append(f"Country-Specific Insights for {country}:")
-        usecases.extend(country_insights)
+        # Fetch relevant industry and business function use cases
+        usecases = USE_CASES.get(industry, {}).get(business_function, ["No relevant use cases found."])
 
-    return jsonify({"usecases": usecases})
+        # Append country-specific insights if available
+        country_insights = COUNTRY_SPECIFIC_INSIGHTS.get(country, [])
+        if country_insights:
+            usecases.append(f"Country-Specific Insights for {country}:")
+            usecases.extend(country_insights)
+
+        return jsonify({"usecases": usecases})
 
 # For local testing
 if __name__ == "__main__":
