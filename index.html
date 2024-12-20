@@ -8,9 +8,9 @@
 <body>
     <h1>Top Generative AI Use Cases</h1>
     <form id="usecaseForm">
-        <label for="country">European Country:</label>
-        <select id="country" name="country" required>
-            <option value="" disabled selected>Select a country</option>
+        <label for="countries">European countries:</label>
+        <select id="countries" name="countries" required>
+            <option value="" disabled selected>Select a countries</option>
         </select><br><br>
         
         <label for="industry">Industry:</label>
@@ -30,7 +30,7 @@
     <ul id="results"></ul>
     
     <script>
-    const countrySelect = document.getElementById('country');
+    const countriesSelect = document.getElementById('countries');
     const industrySelect = document.getElementById('industry');
     const businessFunctionSelect = document.getElementById('businessFunction');
     const resultsList = document.getElementById('results');
@@ -45,12 +45,12 @@
             const data = await response.json();
             console.log("Dropdown data:", data);
 
-            // Populate country dropdown
-            data.countries.forEach(country => {
+            // Populate countries dropdown
+            data.countries.forEach(countries => {
                 const option = document.createElement('option');
-                option.value = country;
-                option.textContent = country;
-                countrySelect.appendChild(option);
+                option.value = countries;
+                option.textContent = countries;
+                countriesSelect.appendChild(option);
             });
 
             // Populate industry dropdown
@@ -87,12 +87,12 @@
         e.preventDefault();
 
         const formData = {
-            country: countrySelect.value,
+            countries: countriesSelect.value,
             industry: industrySelect.value,
             businessFunction: businessFunctionSelect.value,
         };
 
-        if (!formData.country || !formData.industry || !formData.businessFunction) {
+        if (!formData.countries || !formData.industry || !formData.businessFunction) {
             alert("Please select all options before submitting.");
             return;
         }
