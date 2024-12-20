@@ -132,9 +132,12 @@ def ai_usecases():
 
     elif request.method == 'POST':
         data = request.json
-        country = data.get("country")
+        country = data.get("countries")  # Changed from "country" to "countries"
         industry = data.get("industry")
         business_function = data.get("businessFunction")
+
+        if country not in COUNTRY_SPECIFIC_INSIGHTS or industry not in USE_CASES:
+            return jsonify({"usecases": ["Invalid input. Please verify the country, industry, or business function."]})
 
         usecases = USE_CASES.get(industry, {}).get(business_function, ["No relevant use cases found."])
         country_insights = COUNTRY_SPECIFIC_INSIGHTS.get(country, [])
@@ -147,3 +150,4 @@ def ai_usecases():
 # For local testing
 if __name__ == "__main__":
     app.run(debug=True)
+
