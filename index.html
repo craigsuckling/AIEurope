@@ -43,6 +43,7 @@
                 throw new Error(`Failed to fetch dropdown data: ${response.statusText}`);
             }
             const data = await response.json();
+            console.log("Dropdown data:", data);
 
             // Populate country dropdown
             data.countries.forEach(country => {
@@ -64,13 +65,17 @@
             industrySelect.addEventListener('change', () => {
                 businessFunctionSelect.innerHTML = '<option value="" disabled selected>Select a business function</option>';
                 const selectedIndustry = industrySelect.value;
-                const functions = data.businessFunctions[selectedIndustry] || [];
-                functions.forEach(func => {
-                    const option = document.createElement('option');
-                    option.value = func;
-                    option.textContent = func;
-                    businessFunctionSelect.appendChild(option);
-                });
+                if (data.businessFunctions && data.businessFunctions[selectedIndustry]) {
+                    const functions = data.businessFunctions[selectedIndustry];
+                    functions.forEach(func => {
+                        const option = document.createElement('option');
+                        option.value = func;
+                        option.textContent = func;
+                        businessFunctionSelect.appendChild(option);
+                    });
+                } else {
+                    console.error(`No business functions found for the selected industry: ${selectedIndustry}`);
+                }
             });
         } catch (error) {
             console.error("Error populating dropdowns:", error);
@@ -86,6 +91,11 @@
             industry: industrySelect.value,
             businessFunction: businessFunctionSelect.value,
         };
+
+        if (!formData.country || !formData.industry || !formData.businessFunction) {
+            alert("Please select all options before submitting.");
+            return;
+        }
 
         try {
             const response = await fetch('/.netlify/functions/ai_usecases', {
@@ -113,7 +123,6 @@
 
     // Initialize dropdowns on page load
     populateDropdowns();
-</script>
-
+    </script>
 </body>
 </html>
