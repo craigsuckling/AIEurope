@@ -1,0 +1,176 @@
+import React, { useState } from 'react';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Sparkles } from 'lucide-react';
+
+// Database from previous artifact
+const usesCasesDB = [
+  {
+    "useCase": "Automated Contract Analysis",
+    "industry": "Legal",
+    "businessFunction": "Legal Operations",
+    "potentialBenefits": "Reduced review time by 70%, improved accuracy, standardized analysis",
+    "predictedImpact": "8/10",
+    "technicalRequirements": "LLM with legal domain training, document processing pipeline",
+    "regulatoryConsiderations": "GDPR compliance for data processing, local legal framework alignment"
+  },
+  // ... more use cases from the database
+];
+
+// European countries and their regulatory frameworks
+const countryData = {
+  "France": { regulatoryWeight: 0.9, digitalMaturity: 0.8 },
+  "Germany": { regulatoryWeight: 0.95, digitalMaturity: 0.85 },
+  "UK": { regulatoryWeight: 0.8, digitalMaturity: 0.9 },
+  "Netherlands": { regulatoryWeight: 0.85, digitalMaturity: 0.9 },
+  "Spain": { regulatoryWeight: 0.8, digitalMaturity: 0.75 },
+  "Italy": { regulatoryWeight: 0.8, digitalMaturity: 0.7 },
+  "Sweden": { regulatoryWeight: 0.85, digitalMaturity: 0.95 },
+  "Norway": { regulatoryWeight: 0.85, digitalMaturity: 0.95 },
+  "Denmark": { regulatoryWeight: 0.85, digitalMaturity: 0.9 },
+  "Finland": { regulatoryWeight: 0.85, digitalMaturity: 0.9 }
+};
+
+// Extract unique values from database
+const industries = [...new Set(usesCasesDB.map(uc => uc.industry))];
+const businessFunctions = [...new Set(usesCasesDB.map(uc => uc.businessFunction))];
+
+const GenAIRecommender = () => {
+  const [country, setCountry] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [businessFunction, setBusinessFunction] = useState("");
+  const [recommendations, setRecommendations] = useState([]);
+
+  const calculateScore = (useCase, country, industry, businessFunction) => {
+    if (!country || !industry || !businessFunction) return 0;
+
+    const countryFactors = countryData[country];
+    const baseImpact = parseInt(useCase.predictedImpact) / 10;
+    
+    // Industry match score
+    const industryScore = useCase.industry === industry || useCase.industry === "Cross-Industry" ? 1 : 0.3;
+    
+    // Business function match score
+    const functionScore = useCase.businessFunction === businessFunction ? 1 : 0.3;
+    
+    // Regulatory feasibility score based on country
+    const regulatoryScore = useCase.regulatoryConsiderations.includes("GDPR") ? 
+      countryFactors.regulatoryWeight : 0.7;
+    
+    // Technical feasibility score based on country's digital maturity
+    const technicalScore = countryFactors.digitalMaturity;
+    
+    // Weighted final score
+    const finalScore = (
+      baseImpact * 0.3 +
+      industryScore * 0.25 +
+      functionScore * 0.2 +
+      regulatoryScore * 0.15 +
+      technicalScore * 0.1
+    ) * 100;
+    
+    return finalScore;
+  };
+
+  const getRecommendations = () => {
+    if (!country || !industry || !businessFunction) {
+      setRecommendations([]);
+      return;
+    }
+
+    const scoredUseCases = usesCasesDB.map(useCase => ({
+      ...useCase,
+      score: calculateScore(useCase, country, industry, businessFunction)
+    }));
+
+    const topRecommendations = scoredUseCases
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3);
+
+    setRecommendations(topRecommendations);
+  };
+
+  return (
+    <Card className="w-full max-w-4xl">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Sparkles className="h-6 w-6" />
+          Capgemini GenAI Use Case Recommender
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Select onValueChange={val => { setCountry(val); getRecommendations(); }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Country" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.keys(countryData).map(country => (
+                  <SelectItem key={country} value={country}>
+                    {country}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select onValueChange={val => { setIndustry(val); getRecommendations(); }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Industry" />
+              </SelectTrigger>
+              <SelectContent>
+                {industries.map(industry => (
+                  <SelectItem key={industry} value={industry}>
+                    {industry}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select onValueChange={val => { setBusinessFunction(val); getRecommendations(); }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Business Function" />
+              </SelectTrigger>
+              <SelectContent>
+                {businessFunctions.map(func => (
+                  <SelectItem key={func} value={func}>
+                    {func}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-4 mt-6">
+            {recommendations.map((rec, index) => (
+              <Card key={index} className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-semibold text-lg">{rec.useCase}</h3>
+                  <Badge variant="secondary">
+                    Score: {rec.score.toFixed(1)}
+                  </Badge>
+                </div>
+                <div className="space-y-2 text-sm">
+                  <p><strong>Benefits:</strong> {rec.potentialBenefits}</p>
+                  <p><strong>Technical Requirements:</strong> {rec.technicalRequirements}</p>
+                  <p><strong>Regulatory Considerations:</strong> {rec.regulatoryConsiderations}</p>
+                </div>
+              </Card>
+            ))}
+            
+            {country && industry && businessFunction && recommendations.length === 0 && (
+              <p className="text-center text-gray-500">No recommendations found for the selected criteria.</p>
+            )}
+            
+            {(!country || !industry || !businessFunction) && (
+              <p className="text-center text-gray-500">Please select all criteria to get recommendations.</p>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default GenAIRecommender;
