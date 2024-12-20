@@ -9,13 +9,19 @@
     <h1>Top Generative AI Use Cases</h1>
     <form id="usecaseForm">
         <label for="country">European Country:</label>
-        <input type="text" id="country" name="country" required><br><br>
+        <select id="country" name="country" required>
+            <option value="" disabled selected>Select a country</option>
+        </select><br><br>
         
         <label for="industry">Industry:</label>
-        <input type="text" id="industry" name="industry" required><br><br>
+        <select id="industry" name="industry" required>
+            <option value="" disabled selected>Select an industry</option>
+        </select><br><br>
         
         <label for="businessFunction">Business Function:</label>
-        <input type="text" id="businessFunction" name="businessFunction" required><br><br>
+        <select id="businessFunction" name="businessFunction" required>
+            <option value="" disabled selected>Select a business function</option>
+        </select><br><br>
         
         <button type="submit">Get Use Cases</button>
     </form>
@@ -24,34 +30,74 @@
     <ul id="results"></ul>
     
     <script>
-        const form = document.getElementById('usecaseForm');
+        const countrySelect = document.getElementById('country');
+        const industrySelect = document.getElementById('industry');
+        const businessFunctionSelect = document.getElementById('businessFunction');
         const resultsList = document.getElementById('results');
 
-        form.addEventListener('submit', async (e) => {
+        // Fetch options for dropdowns from backend
+        async function populateDropdowns() {
+            const response = await fetch('/.netlify/functions/ai_usecases?getOptions=true');
+            const data = await response.json();
+
+            // Populate country dropdown
+            data.countries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country;
+                option.textContent = country;
+                countrySelect.appendChild(option);
+            });
+
+            // Populate industry dropdown
+            data.industries.forEach(industry => {
+                const option = document.createElement('option');
+                option.value = industry;
+                option.textContent = industry;
+                industrySelect.appendChild(option);
+            });
+
+            // Update business function dropdown based on selected industry
+            industrySelect.addEventListener('change', () => {
+                businessFunctionSelect.innerHTML = '<option value="" disabled selected>Select a business function</option>';
+                const selectedIndustry = industrySelect.value;
+                const functions = data.businessFunctions[selectedIndustry] || [];
+                functions.forEach(func => {
+                    const option = document.createElement('option');
+                    option.value = func;
+                    option.textContent = func;
+                    businessFunctionSelect.appendChild(option);
+                });
+            });
+        }
+
+        // Fetch recommendations on form submission
+        document.getElementById('usecaseForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const formData = new FormData(form);
-            const data = {
-                country: formData.get('country'),
-                industry: formData.get('industry'),
-                businessFunction: formData.get('businessFunction'),
+            const formData = {
+                country: countrySelect.value,
+                industry: industrySelect.value,
+                businessFunction: businessFunctionSelect.value,
             };
 
             const response = await fetch('/.netlify/functions/ai_usecases', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data),
+                body: JSON.stringify(formData),
             });
 
             const result = await response.json();
             resultsList.innerHTML = '';
 
-            result.usecases.forEach((usecase) => {
+            result.usecases.forEach(usecase => {
                 const li = document.createElement('li');
                 li.textContent = usecase;
                 resultsList.appendChild(li);
             });
         });
+
+        // Initialize dropdowns on page load
+        populateDropdowns();
     </script>
 </body>
 </html>
